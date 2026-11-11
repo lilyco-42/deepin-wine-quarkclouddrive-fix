@@ -1,0 +1,79 @@
+# Maintainer: zxp19821005 <zxp19821005 at 163 dot com>
+# Repackaged locally with fixes for non-Deepin desktops (CachyOS/Arch).
+_officalname=quarkclouddrive
+pkgname="deepin-wine-${_officalname}"
+_downname=QuarkCloudDrive
+_installpkgpath=quark-cloud-drive
+pkgver=3.2.6spark4
+_sparkpkgname="cn.${_officalname}.spark"
+pkgrel=4
+pkgdesc="夸克网盘是夸克推出的一款云服务产品，可轻松进行照片、视频、文档、音频等文件的在线备份、同步和分享，并支持电脑/手机/iPad端等多个端。"
+arch=("x86_64")
+url="https://pan.quark.cn/"
+_downurl=https://pc.qq.com/
+_sparkdown=("https://mirrors.sdu.edu.cn/spark-store")
+license=('LicenseRef-custom')
+conflicts=("${_officalname}")
+provides=("${_officalname}")
+depends=(
+    'deepin-wine8-stable'
+    'spark-dwine-helper'
+    'xdg-utils'
+    'spark-transhell'
+)
+optdepends=(
+    'wqy-microhei'
+    'wqy-zenhei'
+)
+install="${pkgname}.install"
+source=(
+    "${pkgname}_${pkgver}_amd64.deb::${_sparkdown}/store/network/${_sparkpkgname}/${_sparkpkgname}_${pkgver}_all.deb"
+    "LICENSE.html"
+    "${pkgname}.sh"
+    "Deepin-QuarkCloudDrive.sh"
+)
+sha256sums=('1f01a60ff524d214f0e53a0b61a828263306e9748528c132637325010d67e425'
+            'b8252eb8c22ea41cc43c9436f341a78cac19cbc71c3593fa1b042fc9136f6767'
+            'c6c75f3423e22e155c24b1a667958aa8cfbfaec0bcb6af26fbde4b2305d6c5b6'
+            '3cbe07052384b4b84bc99e8881c52a7144ec0d46cfba8a1250b4096c36d3443f')
+build() {
+    sed -e "s|@appname@|${pkgname}|g" \
+        -e "s|@appver@|${pkgver}|g" \
+        -e "s|@bottlename@|${_downname}|g" \
+        -i "${srcdir}/${pkgname}.sh"
+    # 幂等：重复构建时先把上次解包结果清掉，否则 mv 会把新目录塞进旧目录里
+    rm -rf "${srcdir}/opt" "${srcdir}/usr"
+    bsdtar -xf "${srcdir}/data."*
+    rm -rf "${srcdir}/opt/apps/${pkgname}"
+    mv "${srcdir}/opt/apps/${_sparkpkgname}" "${srcdir}/opt/apps/${pkgname}"
+    # FIX 1: 上游此处用 sed 把 Exec 改成 "${pkgname} --no-sandbox"，但 QuarkCloudDrive.exe
+    # 使用自研命令行解析器，--no-sandbox 会被判定为非法参数（"bad option"）并 RC=9 退出。
+    # Electron 渲染进程会自动带上 --no-sandbox，无需外部传入。
+    # FIX 2: deb 自带的 Exec 指向 /opt/apps/.../files/run.sh，那条链路用的是
+    # BOTTLENAME=Spark-QuarkCloudDrive 且不会剔除 ELECTRON_RUN_AS_NODE，
+    # 桌面点击/gtk-launch 会绕开 /usr/bin 包装脚本。这里直接改指 ${pkgname}。
+    _desk="${srcdir}/opt/apps/${pkgname}/entries/applications/${_sparkpkgname}.desktop"
+    sed -e "s|${_sparkpkgname}|${pkgname}|g" \
+        -e "s|^Exec=.*|Exec=${pkgname} -u %u|" \
+        -i "$_desk"
+    # run.sh 同样修好：小写盘符 + 剔除 ELECTRON_*，即使被直接调用也能正常启动
+    _runsh="${srcdir}/opt/apps/${pkgname}/files/run.sh"
+    if [ -f "$_runsh" ]; then
+        sed -i -e 's|"C:/windows/command/start.exe"|"c:/windows/command/start.exe"|' \
+               -e 's|^Get_Dist_Name$|unset ELECTRON_RUN_AS_NODE ELECTRON_NO_ATTACH_CONSOLE\nGet_Dist_Name|' \
+               "$_runsh"
+    fi
+    rm -rf "${srcdir}/opt/apps/${pkgname}/info"
+}
+package() {
+    cp -r "${srcdir}/opt" "${pkgdir}"
+    md5sum "${pkgdir}/opt/apps/${pkgname}/files/files.7z" | awk '{ print $1 }' > "${pkgdir}/opt/apps/${pkgname}/files/files.md5sum"
+    install -Dm644 "${srcdir}/opt/apps/${pkgname}/entries/applications/${_sparkpkgname}.desktop" "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+    install -Dm644 "${srcdir}/opt/apps/${pkgname}/entries/icons/hicolor/scalable/apps/${_sparkpkgname}.png" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/${pkgname}.png"
+    install -Dm644 "${srcdir}/LICENSE.html" -t "${pkgdir}/usr/share/licenses/${pkgname}"
+    install -Dm755 "${srcdir}/${pkgname}.sh" "${pkgdir}/usr/bin/${pkgname}"
+    # FIX: spark_run_v4.sh 的专属 APP 钩子（自动剔除 ELECTRON_RUN_AS_NODE、
+    # 自动生成缩放配置避免 zenity 阻塞、修正 C: 盘符大小写）
+    install -Dm644 "${srcdir}/Deepin-QuarkCloudDrive.sh" \
+        "${pkgdir}/opt/deepinwine/tools/spark_run_v4_app_configs/Deepin-QuarkCloudDrive.sh"
+}

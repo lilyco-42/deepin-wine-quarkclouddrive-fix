@@ -1,0 +1,12 @@
+# 构建产物（二进制太大，不适合进 git；用 README 里的方式自行 makepkg）
+pkg/
+src/pkg/
+src/src/
+*.pkg.tar.zst
+*.pkg.tar.xz
+
+# 上游 deb（150MB，从 SDU 镜像现下）
+*.deb
+
+# makepkg 中间产物
+src/*.log

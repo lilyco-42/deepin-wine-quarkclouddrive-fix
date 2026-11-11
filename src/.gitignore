@@ -1,0 +1,5 @@
+# makepkg 工作目录
+src/
+pkg/
+*.pkg.tar.zst
+*.deb
