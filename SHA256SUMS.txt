@@ -1,0 +1,4 @@
+2f2ecf6af0e09e905071db1b3e7e9efc074721d0cb54c6ee3262789bd8c851d6  deepin-wine8-stable-8.16deepin25_1-1-x86_64.pkg.tar.zst
+92f4215cd8e3f2499de3b8383177b7ebf25569eefecd7b28e1a292b37e293a45  deepin-wine-quarkclouddrive-3.2.6spark4-4-x86_64.pkg.tar.zst
+eaaa0486e893744c46f1a1f89d7e830d945b3d9fd135bcca7b77c51f93908d9a  spark-dwine-helper-5.8_5.3.14-1-any.pkg.tar.zst
+61f73a9203b48903ef223b2b9c79cefcfc39de8d3e768a0e6024e9ff98580238  spark-transhell-1.1-5-x86_64.pkg.tar.zst
