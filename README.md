@@ -24,8 +24,42 @@
 
 ## 快速开始
 
+### 一键安装（推荐）
+
 ```bash
-# 从 Release 下载四个包后，一次装完（顺序无关，pacman 会处理）
+bash <(curl -fsSL https://raw.githubusercontent.com/lilyco-42/deepin-wine-quarkclouddrive-fix/main/install.sh)
+```
+
+脚本会依次：检查环境（发行版 / 架构 / 空间 / 冲突包）→ 下载四个包 → 校验 SHA256 →
+`pacman -U` 一次装完 → 验证结果 → 提示启动方式。装完会顺手清掉旧版本残留的
+`~/.deepinwine/Spark-QuarkCloudDrive`，并刷新桌面数据库。
+
+下载有缓存，重复执行不会重新下载；缓存目录 `~/.cache/quarkclouddrive-fix/v3.2.6spark4-4`。
+
+| 选项 | 作用 |
+|---|---|
+| `-y`, `--yes` | 全部使用默认答案，不交互（适合脚本 / CI） |
+| `--launch` | 安装完成后立即启动夸克网盘 |
+| `--dry-run` | 只检查环境、下载并校验，**不修改系统** |
+| `--local DIR` | 用本地目录里已下好的 `.pkg.tar.zst`，不联网 |
+| `--cache DIR` | 自定义下载缓存目录 |
+| `--skip-verify` | 跳过 SHA256 校验（不推荐） |
+| `-u`, `--uninstall` | 卸载，并询问是否清理 Wine 数据与缓存 |
+| `-h`, `--help` | 帮助 |
+
+不想让脚本碰系统？先跑一遍 `--dry-run` 看它打算做什么：
+
+```bash
+curl -fsSL -o install.sh https://raw.githubusercontent.com/lilyco-42/deepin-wine-quarkclouddrive-fix/main/install.sh
+less install.sh          # 440 行，纯 bash，无隐藏下载
+bash install.sh --dry-run
+```
+
+### 手动安装
+
+也可以自己下 [Release](../../releases/latest) 里的四个包，一次装完（顺序无关，pacman 会处理）：
+
+```bash
 sudo pacman -U \
   spark-transhell-1.1-5-x86_64.pkg.tar.zst \
   deepin-wine8-stable-8.16deepin25_1-1-x86_64.pkg.tar.zst \
@@ -33,7 +67,7 @@ sudo pacman -U \
   deepin-wine-quarkclouddrive-3.2.6spark4-4-x86_64.pkg.tar.zst
 ```
 
-然后从应用菜单点「夸克网盘」，或终端执行 `deepin-wine-quarkclouddrive`。
+两种方式结果一样。然后从应用菜单点「夸克网盘」，或终端执行 `deepin-wine-quarkclouddrive`。
 首次启动会自动创建 Wine bottle（约 1 分钟），**不会弹任何对话框**。
 
 自己构建：见下方 [从源码构建](#从源码构建)。
